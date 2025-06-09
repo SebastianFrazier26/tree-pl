@@ -1,0 +1,317 @@
+**A10 - Smalltalk**
+
+<!--
+
+General
+========
+
+For each of your team's implementations, explain the following (where appropriate and applicable):
+
+- details on calling conventions, input and output data formats, limitations, bugs, and special features.
+- negative aspects of your program (limitations, known bugs)
+- positive aspects (extensions, special features)
+- describe your choice of modularization (abstractions), data structures, and algorithms
+- explain anything you did that is likely to be different from what other students may have done
+- justify any design decisions for which the rationale isn't immediately clear
+
+Feel free to modify the structure of this `readme.html` file to fit the current assignment and to fit how you wish to present your findings.
+
+
+Submission
+-----------
+w
+Create a zip file that contains all of your code, this `readme.html` document, and any additional files of evidence (ex: screenshots).
+
+Use folders to divide up the subparts of your submission.
+For example, your zip file could look like the following:
+
+~~~~
+readme.html
+ada/
+    primepartitions.adb
+    screenshot.png
+go/
+    primepartitions.go
+    screenshot.png
+haskell/
+    primepartitions.hs
+    screenshot.png
+prolog/
+    primepartitions.pl
+    screenshot.png
+python/
+    primepartitions.py
+    screenshot.png
+~~~~
+-->
+
+
+Author
+=============
+
+<!-- Note: wrapping table in div.noheader will hide the table's header -->
+<!-- Note: wrapping table in div.firstcol will style the first column different from other columns -->
+<div class="noheader firstcol">
+                  |             
+------------------|-------------
+name              | Sebastian Frazier
+computer + OS     | macOS Sonoma 14.5
+time to complete  | 3 hours
+additional help   | Provided resources & Google for Syntax
+extra credit      | Completed binsearch/2
+</div>
+
+
+Testing code
+=================
+
+,,,
+
+?- inorder(void).
+
+?- inorder(tree1, [7]).
+
+?- inorder(tree4, [1, 7, 5]).
+
+?- inorder(tree4, [1, 5, 7]).
+
+?- inorder(tree2, [2, 4, 6, 8, 10, 14, 12]).
+
+?- subtree(tree4, tree(1, void, void)).
+
+?- subtree(tree2, tree(6, void, 1)).
+
+?- sumtree(tree2).
+
+?- ordered(tree4).
+
+?- ordered(tree1).
+
+?- ordered(tree2).
+
+?- substitute(tree3, 15, tree33, 155).
+
+?- substitute(tree3, 15, tree33, 156).
+
+?- pathto(tree4, 1, [7, 1]).
+
+?- pathto(tree4, 5, [2, 1]).
+
+?- binsearch(tree2, 14).
+
+?- binsearch(tree2, 55).
+,,,
+
+Implementation
+================
+
+Many of the methods are quite similar in that they follow the same pattern of: provide basecase, check node (for some), check left tree, check right tree.
+In fact, pretty much every single predicate can be broken down into those steps, some having a few additional operations but often nothing
+extremely complex. Once I understood the recursion of everything better, the methods were really rather easy to code. Admittedly, having done prolog
+before from assignment 1 made this all much easier since I was already relatively familiar with the syntax. I like the style of prolog programming,
+especially for programs that lend themselves well to recursion. I imagine, however, that more complex and larger programs would be extremely tedious in this language outside
+of simple/basic structures and mathematics. For instance, designing a website in Prolog seems like it would take forever and be very inefficient.
+
+inorder
+--------------------------------
+,,,
+% inorder/2
+% inorder - returns a boolean of if In is an inorder traversal of a tree Tree
+inorder(void, []). % basecase
+inorder(tree(X, L, R), In) :-
+    inorder(L, Ls), % left tree traversal
+    inorder(R, Rs), % right tree traversal
+    append(Ls, [X|Rs], In). % combined traversal with root node.
+,,,
+
+
+subtree/2
+--------------------------------
+,,,
+% subtree/2
+% subtree - returns true of Subtree is a subtree of Tree
+subtree(Tree, Tree). % basecase
+subtree(tree(_, L, _), Subtree) :-
+    subtree(L, Subtree). % check left subtree
+subtree(tree(_, _, R), Subtree) :-
+    subtree(R, Subtree). % check right subtree
+,,,
+
+sumtree/2
+--------------------------------
+,,,
+% sumtree/2
+% sumtree - for an integer tree get the sum of all nodes
+sumtree(void, 0). % basecase
+% we traverse the tree and add each node to our sum
+sumtree(tree(X, Left, Right), Sum) :-
+    sumtree(Left, LeftSum),
+    sumtree(Right, RightSum),
+    Sum is X + LeftSum + RightSum. % calculate sum
+,,,
+
+ordered/1
+--------------------------------
+The longest and most difficult function to write because it required multiple helpers.
+,,,
+% ordered/1
+% bigger helper
+bigger(_, void). % basecase
+bigger(X, tree(Y, Left, Right)) :-
+    X > Y,
+    bigger(X, Left),
+    bigger(X, Right).
+
+% smaller helper
+smaller(_, void). % basecase
+smaller(X, tree(Y, Left, Right)) :-
+    X < Y, % X must be smaller than the root Y
+    smaller(X, Left),
+    smaller(X, Right).
+
+% ordered - returns true if tree is a BST with NO duplicates
+ordered(void). % basecase
+ordered(tree(X, Left, Right)) :-
+    smaller(X, Left),
+    bigger(X, Right),
+    ordered(Left),
+    ordered(Right). % must meet all 4 conditions.
+,,,
+
+pathto/3
+--------------------------------
+,,,
+% pathto/3
+% return true if [path] is a path to a key
+pathto(void, _, []) :- !, fail. % basecase
+
+pathto(tree(Key, _, _), Key, []). % key is root
+
+pathto(tree(_, Left, _), Key, [left|Path]) :-
+    pathto(Left, Key, Path). % key is in left subtree
+
+pathto(tree(_, _, Right), Key, [right|Path]) :-
+    pathto(Right, Key, Path). % key is in right subtree
+,,,
+
+substitute/4
+--------------------------------
+% substitute/4
+% - substitute is true when TreeY is the result of replacing all X in TreeX with Y
+substitute(void, _, void, _). % basecase
+
+% X is the root of TreeX
+substitute(tree(X, Lx, Rx), X, tree(Y, Ly, Ry), Y) :-
+    substitute(Lx, X, Ly, Y), % Recursively substitute in the left subtree
+    substitute(Rx, X, Ry, Y). % Recursively substitute in the right subtree
+
+% X is NOT the root of TreeX
+substitute(tree(Z, Lx, Rx), X, tree(Z, Ly, Ry), Y) :-
+    Z \= X,
+    substitute(Lx, X, Ly, Y), % Recursively substitute in the left subtree
+    substitute(Rx, X, Ry, Y). % Recursively substitute in the right subtree
+
+Extra Credit
+binsearch/2
+--------------------------------
+,,,
+% binsearch/2
+% perform binary search for a key in a tree
+binsearch(void, _) :- !, fail. % basecase
+
+binsearch(tree(Key, _, _), Key) :- 
+    write(Key),
+    !. % key is at root
+
+binsearch(tree(Root, Left, _), Key) :- 
+    Key < Root,
+    write(Root),
+    binsearch(Left, Key). % key in lstree
+
+binsearch(tree(Root, _, Right), Key) :- 
+    Key > Root,
+    write(Root),
+    binsearch(Right, Key). % key in rstree
+,,,
+
+trees
+----------------------------------
+,,,
+tree1(T) :- T = tree(7, void, void).
+
+tree2(T) :- T = tree(8, tree(4, tree(2, void, void), tree(6, void, void)), tree(12, tree(10, void, void), tree(14, void, void))).
+
+tree3(T) :- T = tree(10, tree(5, tree(5, void, void), void), tree(15, tree(15, void, void), void)).
+
+tree4(T) :- T = tree(7, tree(1, void, void), tree(5, void, void)).
+
+tree33(T) :- T = tree(10, tree(5, tree(5, void, void), void), tree(155, tree(155, void, void), void)).
+,,,
+
+Assignment Reflection
+======================
+I enjoy prolog but find it very tedious at times. Especially with having to 'define' things multiple times in a sense the language easily becomes
+confusing and difficult to read. With that, I will admit that if I was experienced in it I bet I'd find it rather easy, especially for tasks like this.
+All these functions would likely require much more code if written in a language like Java or Python so prolog does allow a bit more simplicity.
+<!-- Note: wrapping table in div.noheader will hide the table's header -->
+<!-- Note: wrapping table in div.firstcol will style the first column different from other columns -->
+<div class="noheader firstcol">
+                        |     
+</div>
+
+<!--
+How do the languages compare to one another?
+Which language was your favorite?  Which was your least favorite?
+What type of problems would each language be good at solving?
+When you had a choice of language, why did you decide on the language in which you implemented your solution?
+If you worked with a partnor, how did you decide to split up the work?
+
+List any other comments below.
+Feel free to provide any feedback on how much you learned from doing the assignment, and whether you enjoyed doing it.
+-->
+
+<!--   Feel free to modify the following to fit a theme of your choosing   -->
+<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet"> <!-- a sans-serif font -->
+<style>  /* A TAYLOR-INSPIRED THEME */
+    body {font-family:'Open Sans',sans-serif;}
+    .md a:link, .md a:visited {color:hsl(252,23.0%,44.3%); font-family:'Open Sans',sans-serif;}
+    .md table.table th {background-color:hsl(252,23.0%,44.3%);}
+    .md .noheader th {display:none;}
+    .md .firstcol td:first-child {white-space:pre;color:white;vertical-align:top;font-weight:bold;border-color:black;background:hsl(252,23.0%,54.3%);}
+    .md .firstcol tr:nth-child(even) td:first-child {background:hsl(252,23.0%,44.3%);}
+</style>
+
+
+<!-- ****************************** -->
+<!--    Leave the content below     -->
+<!-- ****************************** -->
+
+<!-- The script and style below are added for clarity and to workaround a bug -->
+<script>
+    // this is a hack to workaround a bug in Markdeep+Mathjax, where
+    // `$`` is automatically converted to `\(`` and `\)`` too soon.
+    // the following code will replace the innerHTML of all elements
+    // with class "dollar" with a dollar sign.
+    setTimeout(function() {
+        var dollars = document.getElementsByClassName('dollar');
+        for(var i = 0; i < dollars.length; i++) {
+            dollars[i].innerHTML = '&#' + '36;'; // split to prevent conversion to $
+        }
+    }, 1000);
+</script>
+<style>
+    /* adding some styling to <code> tags (but not <pre><code> coding blocks!) */
+    :not(pre) > code {
+        background-color: rgba(0,0,0,0.05);
+        outline: 1px solid rgba(0,0,0,0.15);
+        margin-left: 0.25em;
+        margin-right: 0.25em;
+    }
+    /* fixes table of contents of medium-length document from looking weird if admonitions are behind */
+    .md div.mediumTOC { background: white; }
+    .md div.admonition { position: initial !important; }
+</style>
+
+<!--   Leave the following Markdeep formatting code, as this will format your text above to look nice in a wed browser   -->
+
+<script src="https://casual-effects.com/markdeep/latest/markdeep.min.js"></script><!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js?"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
